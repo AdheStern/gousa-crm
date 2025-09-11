@@ -1,0 +1,1350 @@
+{
+  "id": "073aa362-fba6-4091-b42a-80da7e1eac23",
+  "prevId": "44c57dda-551d-4e4d-8c5c-bd2542af9fbb",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.cat_estados_pago": {
+      "name": "cat_estados_pago",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_estado": {
+          "name": "nombre_estado",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cat_estados_pago_nombre_estado_unique": {
+          "name": "cat_estados_pago_nombre_estado_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre_estado"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cat_estados_proceso": {
+      "name": "cat_estados_proceso",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_estado": {
+          "name": "nombre_estado",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cat_estados_proceso_nombre_estado_unique": {
+          "name": "cat_estados_proceso_nombre_estado_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre_estado"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cat_tipos_cita": {
+      "name": "cat_tipos_cita",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_tipo": {
+          "name": "nombre_tipo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cat_tipos_cita_nombre_tipo_unique": {
+          "name": "cat_tipos_cita_nombre_tipo_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre_tipo"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cat_tipos_documento": {
+      "name": "cat_tipos_documento",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_tipo": {
+          "name": "nombre_tipo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cat_tipos_documento_nombre_tipo_unique": {
+          "name": "cat_tipos_documento_nombre_tipo_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre_tipo"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cat_tipos_servicio": {
+      "name": "cat_tipos_servicio",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_servicio": {
+          "name": "nombre_servicio",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cat_tipos_servicio_nombre_servicio_unique": {
+          "name": "cat_tipos_servicio_nombre_servicio_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre_servicio"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cat_tipos_tramite": {
+      "name": "cat_tipos_tramite",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_tipo": {
+          "name": "nombre_tipo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cat_tipos_tramite_nombre_tipo_unique": {
+          "name": "cat_tipos_tramite_nombre_tipo_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nombre_tipo"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.citas": {
+      "name": "citas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tramite_id": {
+          "name": "tramite_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_cita_id": {
+          "name": "tipo_cita_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_hora": {
+          "name": "fecha_hora",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lugar": {
+          "name": "lugar",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "costo": {
+          "name": "costo",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "estado_pago_cita": {
+          "name": "estado_pago_cita",
+          "type": "pago_cita_estado",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_cita",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "citas_tramite_id_tramites_id_fk": {
+          "name": "citas_tramite_id_tramites_id_fk",
+          "tableFrom": "citas",
+          "tableTo": "tramites",
+          "columnsFrom": [
+            "tramite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "citas_tipo_cita_id_cat_tipos_cita_id_fk": {
+          "name": "citas_tipo_cita_id_cat_tipos_cita_id_fk",
+          "tableFrom": "citas",
+          "tableTo": "cat_tipos_cita",
+          "columnsFrom": [
+            "tipo_cita_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.clientes": {
+      "name": "clientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombres": {
+          "name": "nombres",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "apellidos": {
+          "name": "apellidos",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_nacimiento": {
+          "name": "fecha_nacimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lugar_nacimiento": {
+          "name": "lugar_nacimiento",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nacionalidad": {
+          "name": "nacionalidad",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero_ci": {
+          "name": "numero_ci",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero_pasaporte": {
+          "name": "numero_pasaporte",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pasaporte_fecha_emision": {
+          "name": "pasaporte_fecha_emision",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pasaporte_fecha_expiracion": {
+          "name": "pasaporte_fecha_expiracion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono_celular": {
+          "name": "telefono_celular",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "facebook": {
+          "name": "facebook",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram": {
+          "name": "instagram",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion_domicilio": {
+          "name": "direccion_domicilio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado_civil": {
+          "name": "estado_civil",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profesion": {
+          "name": "profesion",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conyuge_nombre_completo": {
+          "name": "conyuge_nombre_completo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conyuge_fecha_nacimiento": {
+          "name": "conyuge_fecha_nacimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conyuge_lugar_nacimiento": {
+          "name": "conyuge_lugar_nacimiento",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "matrimonio_fecha_inicio": {
+          "name": "matrimonio_fecha_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "matrimonio_fecha_fin": {
+          "name": "matrimonio_fecha_fin",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_padre": {
+          "name": "nombre_padre",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_nacimiento_padre": {
+          "name": "fecha_nacimiento_padre",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_madre": {
+          "name": "nombre_madre",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_nacimiento_madre": {
+          "name": "fecha_nacimiento_madre",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_recoleccion_datos": {
+          "name": "motivo_recoleccion_datos",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lugar_trabajo": {
+          "name": "lugar_trabajo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descripcion_trabajo": {
+          "name": "descripcion_trabajo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_contratacion": {
+          "name": "fecha_contratacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion_trabajo": {
+          "name": "direccion_trabajo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cargo_trabajo": {
+          "name": "cargo_trabajo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono_trabajo": {
+          "name": "telefono_trabajo",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "percepcion_salarial": {
+          "name": "percepcion_salarial",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referencia_trabajo_anterior": {
+          "name": "referencia_trabajo_anterior",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_trabajo_anterior": {
+          "name": "nombre_trabajo_anterior",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono_trabajo_anterior": {
+          "name": "telefono_trabajo_anterior",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion_trabajo_anterior": {
+          "name": "direccion_trabajo_anterior",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_inicio_trabajo_anterior": {
+          "name": "fecha_inicio_trabajo_anterior",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_inicio_trabajo_actual": {
+          "name": "fecha_inicio_trabajo_actual",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lugar_estudio": {
+          "name": "lugar_estudio",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "carrera_estudio": {
+          "name": "carrera_estudio",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion_estudio": {
+          "name": "direccion_estudio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono_estudio": {
+          "name": "telefono_estudio",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_inicio_estudio": {
+          "name": "fecha_inicio_estudio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_fin_estudio": {
+          "name": "fecha_fin_estudio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_tentativa_viaje": {
+          "name": "fecha_tentativa_viaje",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_contacto_usa": {
+          "name": "nombre_contacto_usa",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion_contacto_usa": {
+          "name": "direccion_contacto_usa",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono_contacto_usa": {
+          "name": "telefono_contacto_usa",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email_contacto_usa": {
+          "name": "email_contacto_usa",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "clientes_numero_ci_unique": {
+          "name": "clientes_numero_ci_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "numero_ci"
+          ]
+        },
+        "clientes_numero_pasaporte_unique": {
+          "name": "clientes_numero_pasaporte_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "numero_pasaporte"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.documentos": {
+      "name": "documentos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tramite_id": {
+          "name": "tramite_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_documento_id": {
+          "name": "tipo_documento_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre_documento": {
+          "name": "nombre_documento",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruta_archivo": {
+          "name": "ruta_archivo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "documentos_tramite_id_tramites_id_fk": {
+          "name": "documentos_tramite_id_tramites_id_fk",
+          "tableFrom": "documentos",
+          "tableTo": "tramites",
+          "columnsFrom": [
+            "tramite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "documentos_tipo_documento_id_cat_tipos_documento_id_fk": {
+          "name": "documentos_tipo_documento_id_cat_tipos_documento_id_fk",
+          "tableFrom": "documentos",
+          "tableTo": "cat_tipos_documento",
+          "columnsFrom": [
+            "tipo_documento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.familia_clientes": {
+      "name": "familia_clientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "familia_id": {
+          "name": "familia_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parentesco": {
+          "name": "parentesco",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "familia_clientes_familia_id_familias_id_fk": {
+          "name": "familia_clientes_familia_id_familias_id_fk",
+          "tableFrom": "familia_clientes",
+          "tableTo": "familias",
+          "columnsFrom": [
+            "familia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "familia_clientes_cliente_id_clientes_id_fk": {
+          "name": "familia_clientes_cliente_id_clientes_id_fk",
+          "tableFrom": "familia_clientes",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.familias": {
+      "name": "familias",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.servicios_complementarios": {
+      "name": "servicios_complementarios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_responsable_id": {
+          "name": "usuario_responsable_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_servicio_id": {
+          "name": "tipo_servicio_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_inicio_servicio": {
+          "name": "fecha_inicio_servicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_fin_servicio": {
+          "name": "fecha_fin_servicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "servicios_complementarios_cliente_id_clientes_id_fk": {
+          "name": "servicios_complementarios_cliente_id_clientes_id_fk",
+          "tableFrom": "servicios_complementarios",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "servicios_complementarios_usuario_responsable_id_usuarios_id_fk": {
+          "name": "servicios_complementarios_usuario_responsable_id_usuarios_id_fk",
+          "tableFrom": "servicios_complementarios",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_responsable_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "servicios_complementarios_tipo_servicio_id_cat_tipos_servicio_id_fk": {
+          "name": "servicios_complementarios_tipo_servicio_id_cat_tipos_servicio_id_fk",
+          "tableFrom": "servicios_complementarios",
+          "tableTo": "cat_tipos_servicio",
+          "columnsFrom": [
+            "tipo_servicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tramite_logs": {
+      "name": "tramite_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tramite_id": {
+          "name": "tramite_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accion_realizada": {
+          "name": "accion_realizada",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_accion": {
+          "name": "fecha_accion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tramite_logs_tramite_id_tramites_id_fk": {
+          "name": "tramite_logs_tramite_id_tramites_id_fk",
+          "tableFrom": "tramite_logs",
+          "tableTo": "tramites",
+          "columnsFrom": [
+            "tramite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "tramite_logs_usuario_id_usuarios_id_fk": {
+          "name": "tramite_logs_usuario_id_usuarios_id_fk",
+          "tableFrom": "tramite_logs",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tramites": {
+      "name": "tramites",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_asignado_id": {
+          "name": "usuario_asignado_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_tramite_id": {
+          "name": "tipo_tramite_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_proceso_id": {
+          "name": "estado_proceso_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_pago_id": {
+          "name": "estado_pago_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo_confirmacion_ds160": {
+          "name": "codigo_confirmacion_ds160",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codigo_seguimiento_courier": {
+          "name": "codigo_seguimiento_courier",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visa_numero": {
+          "name": "visa_numero",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visa_fecha_emision": {
+          "name": "visa_fecha_emision",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visa_fecha_expiracion": {
+          "name": "visa_fecha_expiracion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tramites_cliente_id_clientes_id_fk": {
+          "name": "tramites_cliente_id_clientes_id_fk",
+          "tableFrom": "tramites",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "tramites_usuario_asignado_id_usuarios_id_fk": {
+          "name": "tramites_usuario_asignado_id_usuarios_id_fk",
+          "tableFrom": "tramites",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_asignado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "tramites_tipo_tramite_id_cat_tipos_tramite_id_fk": {
+          "name": "tramites_tipo_tramite_id_cat_tipos_tramite_id_fk",
+          "tableFrom": "tramites",
+          "tableTo": "cat_tipos_tramite",
+          "columnsFrom": [
+            "tipo_tramite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "tramites_estado_proceso_id_cat_estados_proceso_id_fk": {
+          "name": "tramites_estado_proceso_id_cat_estados_proceso_id_fk",
+          "tableFrom": "tramites",
+          "tableTo": "cat_estados_proceso",
+          "columnsFrom": [
+            "estado_proceso_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "tramites_estado_pago_id_cat_estados_pago_id_fk": {
+          "name": "tramites_estado_pago_id_cat_estados_pago_id_fk",
+          "tableFrom": "tramites",
+          "tableTo": "cat_estados_pago",
+          "columnsFrom": [
+            "estado_pago_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.usuarios": {
+      "name": "usuarios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_completo": {
+          "name": "nombre_completo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rol": {
+          "name": "rol",
+          "type": "rol",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_creacion": {
+          "name": "fecha_creacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_modificacion": {
+          "name": "fecha_modificacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fecha_eliminacion": {
+          "name": "fecha_eliminacion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "usuarios_email_unique": {
+          "name": "usuarios_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.estado_cita": {
+      "name": "estado_cita",
+      "schema": "public",
+      "values": [
+        "Programada",
+        "Completada",
+        "Cancelada",
+        "Reprogramada"
+      ]
+    },
+    "public.pago_cita_estado": {
+      "name": "pago_cita_estado",
+      "schema": "public",
+      "values": [
+        "Pendiente",
+        "Pagado"
+      ]
+    },
+    "public.rol": {
+      "name": "rol",
+      "schema": "public",
+      "values": [
+        "administrador",
+        "secretaria"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
