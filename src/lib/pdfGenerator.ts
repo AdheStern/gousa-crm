@@ -3,11 +3,14 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Customer } from "@/types/customer";
 
-// Helper de formato de fecha, ahora más seguro
+// Helper de formato de fecha, mantenemos la versión robusta
 const formatDate = (dateString: string | Date | null | undefined): string => {
-  if (!dateString) return "N/A";
+  if (
+    !dateString ||
+    (typeof dateString === "string" && dateString.trim() === "")
+  )
+    return "-";
   try {
-    // Si ya es un objeto Date, perfecto. Si es un string, lo convertimos.
     const date =
       typeof dateString === "string"
         ? new Date(`${dateString}T00:00:00`)
@@ -22,73 +25,39 @@ const formatDate = (dateString: string | Date | null | undefined): string => {
   }
 };
 
-// Helper para obtener valores de forma segura, devolviendo 'N/A' si es null/undefined
-const getValue = (value: string | null | undefined): string => value || "N/A";
+// Helper para obtener valores, mostrando '-' si está vacío. NUNCA devuelve null o undefined.
+const getValue = (value: any): string => (value ? String(value) : "-");
 
-// --- NUEVA FUNCIÓN addSection a prueba de fallos ---
-const addSection = (
-  doc: jsPDF,
-  title: string,
-  data: [string, any][],
-  startY?: number
-) => {
-  const body = data.filter(
-    ([, value]) =>
-      value &&
-      value.toString().trim() !== "" &&
-      value.toString().trim() !== "N/A"
-  );
-
-  if (body.length === 0) {
-    return; // Si no hay datos en la sección, simplemente no hagas nada y sal de la función.
+const addFooter = (doc: jsPDF) => {
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.text(
+      `Página ${i} de ${pageCount}`,
+      doc.internal.pageSize.getWidth() - 14,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: "right" }
+    );
+    doc.text(
+      `Ficha Confidencial de Cliente - GO USA | Generado: ${new Date().toLocaleString(
+        "es-ES"
+      )}`,
+      14,
+      doc.internal.pageSize.getHeight() - 10
+    );
   }
-
-  autoTable(doc, {
-    startY: startY || (doc as any).lastAutoTable.finalY + 8,
-    head: [
-      [
-        {
-          content: title,
-          styles: { fillColor: [34, 119, 85], textColor: 255 },
-        },
-      ],
-    ],
-    body: body,
-    theme: "striped",
-    columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 60 },
-      1: { cellWidth: "auto" },
-    },
-    didDrawPage: (data) =>
-      addFooter(doc, data.pageNumber, doc.internal.getNumberOfPages()),
-  });
 };
 
-const addFooter = (doc: jsPDF, currentPage: number, totalPages: number) => {
-  doc.setFontSize(9);
-  doc.setTextColor(150);
-  doc.text(
-    `Página ${currentPage} de ${totalPages}`,
-    doc.internal.pageSize.getWidth() - 14,
-    doc.internal.pageSize.getHeight() - 10,
-    { align: "right" }
-  );
-  doc.text(
-    `Ficha de Cliente - GO USA | Generado el: ${new Date().toLocaleDateString(
-      "es-ES"
-    )}`,
-    14,
-    doc.internal.pageSize.getHeight() - 10
-  );
-};
-
-// --- Main PDF Generation Function (ACTUALIZADA) ---
 export const generateCustomerPdf = (customer: Customer) => {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
-    format: "legal",
+    format: "legal", // Tamaño Oficio
   });
+
+  let lastY = 0; // Variable para controlar la posición vertical manualmente
 
   // --- CABECERA ---
   doc.setFont("helvetica", "bold");
@@ -106,16 +75,38 @@ export const generateCustomerPdf = (customer: Customer) => {
   doc.setDrawColor(200);
   doc.line(14, 32, 201.5, 32);
 
-  const startY = 40;
+  lastY = 40; // Posición de inicio después de la cabecera
 
-  // --- SECCIONES DEL PDF (Ahora usando getValue para asegurar que pasamos strings) ---
-  addSection(
-    doc,
-    "MOTIVO DE RECOLECCIÓN DE DATOS",
-    [["Motivo", getValue(customer.motivoRecoleccionDatos)]],
-    startY
-  );
-  addSection(doc, "INFORMACIÓN PERSONAL", [
+  // --- FUNCIÓN HELPER INTERNA PARA DIBUJAR TABLAS ---
+  const drawTable = (title: string, data: [string, string][]) => {
+    autoTable(doc, {
+      startY: lastY,
+      head: [
+        [
+          {
+            content: title,
+            styles: { fillColor: [22, 163, 74], textColor: 255 },
+          },
+        ],
+      ],
+      body: data,
+      theme: "striped",
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 70 },
+        1: { cellWidth: "auto" },
+      },
+    });
+    lastY = (doc as any).lastAutoTable.finalY + 8; // Actualizamos la posición para la siguiente tabla
+  };
+
+  // ======================================================
+  //                    DIBUJAR TODAS LAS SECCIONES
+  // ======================================================
+  drawTable("MOTIVO DE RECOLECCIÓN DE DATOS", [
+    ["Motivo", getValue(customer.motivoRecoleccionDatos)],
+  ]);
+
+  drawTable("INFORMACIÓN PERSONAL", [
     ["Nombres", getValue(customer.nombres)],
     ["Apellidos", getValue(customer.apellidos)],
     ["Fecha de Nacimiento", formatDate(customer.fechaNacimiento)],
@@ -125,32 +116,37 @@ export const generateCustomerPdf = (customer: Customer) => {
     ["Estado Civil", getValue(customer.estadoCivil)],
     ["Profesión", getValue(customer.profesion)],
   ]);
-  addSection(doc, "INFORMACIÓN DE CONTACTO", [
+
+  drawTable("INFORMACIÓN DE CONTACTO", [
     ["Email", getValue(customer.email)],
     ["Teléfono Celular", getValue(customer.telefonoCelular)],
     ["Facebook", getValue(customer.facebook)],
     ["Instagram", getValue(customer.instagram)],
     ["Dirección Domicilio", getValue(customer.direccionDomicilio)],
   ]);
-  addSection(doc, "INFORMACIÓN DE PASAPORTE", [
+
+  drawTable("INFORMACIÓN DE PASAPORTE", [
     ["Número de Pasaporte", getValue(customer.numeroPasaporte)],
     ["Fecha de Emisión", formatDate(customer.pasaporteFechaEmision)],
     ["Fecha de Expiración", formatDate(customer.pasaporteFechaExpiracion)],
   ]);
-  addSection(doc, "INFORMACIÓN DEL CÓNYUGE", [
+
+  drawTable("INFORMACIÓN DEL CÓNYUGE", [
     ["Nombre Completo", getValue(customer.conyugeNombreCompleto)],
     ["Fecha de Nacimiento", formatDate(customer.conyugeFechaNacimiento)],
     ["Lugar de Nacimiento", getValue(customer.conyugeLugarNacimiento)],
     ["Fecha de Matrimonio", formatDate(customer.matrimonioFechaInicio)],
     ["Fecha Fin Matrimonio", formatDate(customer.matrimonioFechaFin)],
   ]);
-  addSection(doc, "INFORMACIÓN DE LOS PADRES", [
+
+  drawTable("INFORMACIÓN DE LOS PADRES", [
     ["Nombre del Padre", getValue(customer.nombrePadre)],
     ["Fecha Nacimiento Padre", formatDate(customer.fechaNacimientoPadre)],
     ["Nombre de la Madre", getValue(customer.nombreMadre)],
     ["Fecha Nacimiento Madre", formatDate(customer.fechaNacimientoMadre)],
   ]);
-  addSection(doc, "INFORMACIÓN LABORAL ACTUAL", [
+
+  drawTable("INFORMACIÓN LABORAL ACTUAL", [
     ["Lugar de Trabajo", getValue(customer.lugarTrabajo)],
     ["Cargo", getValue(customer.cargoTrabajo)],
     ["Percepción Salarial", getValue(customer.persepcionSalarial)],
@@ -158,15 +154,18 @@ export const generateCustomerPdf = (customer: Customer) => {
     ["Dirección del Trabajo", getValue(customer.direccionTrabajo)],
     ["Teléfono del Trabajo", getValue(customer.telefonoTrabajo)],
     ["Descripción del Trabajo", getValue(customer.descripcionTrabajo)],
+    ["Fecha de Contratación", formatDate(customer.fechaContratacion)], // <-- CAMPO AÑADIDO
   ]);
-  addSection(doc, "INFORMACIÓN LABORAL ANTERIOR", [
+
+  drawTable("INFORMACIÓN LABORAL ANTERIOR", [
     ["Nombre del Trabajo", getValue(customer.nombreTrabajoAnterior)],
     ["Referencia", getValue(customer.referenciaTrabajoAnterior)],
     ["Fecha de Inicio", formatDate(customer.fechaInicioTrabajoAnterior)],
     ["Dirección", getValue(customer.direccionTrabajoAnterior)],
     ["Teléfono", getValue(customer.telefonoTrabajoAnterior)],
   ]);
-  addSection(doc, "INFORMACIÓN DE ESTUDIOS", [
+
+  drawTable("INFORMACIÓN DE ESTUDIOS", [
     ["Lugar de Estudio", getValue(customer.lugarEstudio)],
     ["Carrera", getValue(customer.carreraEstudio)],
     ["Fecha de Inicio", formatDate(customer.fechaInicioEstudio)],
@@ -174,7 +173,8 @@ export const generateCustomerPdf = (customer: Customer) => {
     ["Dirección", getValue(customer.direccionEstudio)],
     ["Teléfono", getValue(customer.telefonoEstudio)],
   ]);
-  addSection(doc, "INFORMACIÓN DE VIAJE Y CONTACTO EN USA", [
+
+  drawTable("INFORMACIÓN DE VIAJE Y CONTACTO EN USA", [
     ["Fecha Tentativa de Viaje", formatDate(customer.fechaTentativaViaje)],
     ["Nombre del Contacto", getValue(customer.nombreContactoUSA)],
     ["Dirección del Contacto", getValue(customer.direccionContactoUSA)],
@@ -182,11 +182,8 @@ export const generateCustomerPdf = (customer: Customer) => {
     ["Email del Contacto", getValue(customer.emailContactoUSA)],
   ]);
 
-  // Si no se dibujó ninguna tabla, el footer no se habrá añadido. Lo añadimos aquí por si acaso.
-  if (!(doc as any).lastAutoTable) {
-    addFooter(doc, 1, 1);
-  }
-
+  // --- FOOTER Y GUARDADO ---
+  addFooter(doc);
   doc.save(
     `Ficha-${getValue(customer.nombres)}_${getValue(customer.apellidos)}.pdf`
   );
