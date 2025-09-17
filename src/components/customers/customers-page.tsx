@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Search,
   Users,
+  Download,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ import {
   deleteFamilia,
 } from "@/actions/customers";
 import type { Customer } from "@/types/customer";
+import { generateCustomerPdf } from "@/lib/pdfGenerator";
 
 interface Family {
   id: number;
@@ -369,6 +371,12 @@ export default function CustomersPage() {
                                 Editar
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                onClick={() => generateCustomerPdf(customer)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Descargar Ficha
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() => handleDeleteCustomer(customer)}
                                 className="text-red-600"
                               >
@@ -498,6 +506,7 @@ export default function CustomersPage() {
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar
                               </DropdownMenuItem>
+
                               <DropdownMenuItem
                                 onClick={() => handleDeleteFamily(family)}
                                 className="text-red-600"
