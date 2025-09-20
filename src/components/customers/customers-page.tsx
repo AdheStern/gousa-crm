@@ -48,7 +48,7 @@ import {
   deleteFamilia,
 } from "@/actions/customers";
 import type { Customer } from "@/types/customer";
-import { generateCustomerPdf } from "@/lib/pdfGenerator";
+import { generateCustomerPDF } from "@/lib/pdfGenerator";
 
 interface Family {
   id: number;
@@ -371,7 +371,15 @@ export default function CustomersPage() {
                                 Editar
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => generateCustomerPdf(customer)}
+                                onClick={() => {
+                                  console.log("Nombre:", customer.nombres);
+                                  console.log("Email:", customer.email);
+                                  console.log(
+                                    "Datos del Cónyuge:",
+                                    customer.conyugeNombreCompleto
+                                  );
+                                  generateCustomerPDF(customer);
+                                }}
                               >
                                 <Download className="mr-2 h-4 w-4" />
                                 Descargar Ficha
