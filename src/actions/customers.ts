@@ -253,6 +253,10 @@ export async function updateCustomer(data: UpdateCustomerData) {
       fechaModificacion: new Date(),
     };
 
+    const cleanData = Object.fromEntries(
+      Object.entries(processedData).filter(([_, value]) => value !== undefined)
+    );
+
     const result = await db
       .update(clientes)
       .set(processedData)
