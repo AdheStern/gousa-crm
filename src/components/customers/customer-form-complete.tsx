@@ -822,6 +822,7 @@ export function CustomerFormComplete({
               <div className="space-y-2">
                 <Label htmlFor="persepcionSalarial">Percepción Salarial</Label>
                 <Input
+                  type="numeric"
                   id="persepcionSalarial"
                   {...register("persepcionSalarial")}
                   placeholder="Bs. 5,000"
