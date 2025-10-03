@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,84 +29,218 @@ import {
   updateCustomer,
   getFamilias,
   addClienteToFamilia,
+  checkDuplicateCI,
 } from "@/actions/customers";
 import type { Customer, CreateCustomerData } from "@/types/customer";
 
-const customerSchema = z.object({
-  // Motivo de recolección (moved to top)
-  motivoRecoleccionDatos: z.string().optional(),
+// Schema de validación mejorado
+const customerSchema = z
+  .object({
+    motivoRecoleccionDatos: z.string().optional(),
+    familiaId: z.string().optional(),
+    parentesco: z.string().optional(),
 
-  familiaId: z.string().optional(),
-  parentesco: z.string().optional(),
+    nombres: z
+      .string()
+      .min(2, "Los nombres deben tener al menos 2 caracteres")
+      .max(100, "Los nombres no pueden exceder 100 caracteres")
+      .regex(
+        /^[a-záéíóúñA-ZÁÉÍÓÚÑ\s]+$/,
+        "Los nombres solo pueden contener letras y espacios"
+      ),
 
-  nombres: z.string().min(1, "Los nombres son requeridos"),
-  apellidos: z.string().min(1, "Los apellidos son requeridos"),
-  fechaNacimiento: z.string().optional(),
-  lugarNacimiento: z.string().optional(),
-  nacionalidad: z.string().optional(),
-  numeroCi: z.string().optional(),
-  numeroPasaporte: z.string().optional(),
-  pasaporteFechaEmision: z.string().optional(),
-  pasaporteFechaExpiracion: z.string().optional(),
-  estadoCivil: z.string().optional(),
-  profesion: z.string().optional(),
+    apellidos: z
+      .string()
+      .min(2, "Los apellidos deben tener al menos 2 caracteres")
+      .max(100, "Los apellidos no pueden exceder 100 caracteres")
+      .regex(
+        /^[a-záéíóúñA-ZÁÉÍÓÚÑ\s]+$/,
+        "Los apellidos solo pueden contener letras y espacios"
+      ),
 
-  // Información de contacto
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  telefonoCelular: z.string().min(1, "El teléfono celular es requerido"),
-  facebook: z.string().optional(),
-  instagram: z.string().optional(),
-  direccionDomicilio: z.string().optional(),
+    fechaNacimiento: z
+      .string()
+      .optional()
+      .refine((date) => {
+        if (!date) return true;
+        const birthDate = new Date(date);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        return age >= 0 && age <= 120;
+      }, "La fecha de nacimiento no es válida"),
 
-  // Información del cónyuge
-  conyugeNombreCompleto: z.string().optional(),
-  conyugeFechaNacimiento: z.string().optional(),
-  conyugeLugarNacimiento: z.string().optional(),
-  matrimonioFechaInicio: z.string().optional(),
-  matrimonioFechaFin: z.string().optional(),
+    lugarNacimiento: z.string().max(100, "Máximo 100 caracteres").optional(),
+    nacionalidad: z.string().max(50, "Máximo 50 caracteres").optional(),
 
-  // Información de padres
-  nombrePadre: z.string().optional(),
-  fechaNacimientoPadre: z.string().optional(),
-  nombreMadre: z.string().optional(),
-  fechaNacimientoMadre: z.string().optional(),
+    numeroCi: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^\d{7,10}$/.test(val);
+      }, "El CI debe contener entre 7 y 10 dígitos"),
 
-  // Información laboral actual
-  lugarTrabajo: z.string().optional(),
-  descripcionTrabajo: z.string().optional(),
-  fechaContratacion: z.string().optional(),
-  direccionTrabajo: z.string().optional(),
-  cargoTrabajo: z.string().optional(),
-  telefonoTrabajo: z.string().optional(),
-  persepcionSalarial: z.string().optional(),
-  fechaInicioTrabajoActual: z.string().optional(),
+    numeroPasaporte: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^[A-Z0-9]{6,12}$/i.test(val);
+      }, "El pasaporte debe tener entre 6 y 12 caracteres alfanuméricos"),
 
-  // Información laboral anterior
-  referenciaTrabajoAnterior: z.string().optional(),
-  nombreTrabajoAnterior: z.string().optional(),
-  telefonoTrabajoAnterior: z.string().optional(),
-  direccionTrabajoAnterior: z.string().optional(),
-  fechaInicioTrabajoAnterior: z.string().optional(),
+    pasaporteFechaEmision: z.string().optional(),
+    pasaporteFechaExpiracion: z.string().optional(),
+    estadoCivil: z.string().optional(),
+    profesion: z.string().max(100, "Máximo 100 caracteres").optional(),
 
-  // Información de estudios
-  lugarEstudio: z.string().optional(),
-  carreraEstudio: z.string().optional(),
-  direccionEstudio: z.string().optional(),
-  telefonoEstudio: z.string().optional(),
-  fechaInicioEstudio: z.string().optional(),
-  fechaFinEstudio: z.string().optional(),
+    email: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(val);
+      }, "Ingrese un email válido (ejemplo@dominio.com)"),
 
-  // Información de viaje y contacto en USA
-  fechaTentativaViaje: z.string().optional(),
-  nombreContactoUSA: z.string().optional(),
-  direccionContactoUSA: z.string().optional(),
-  telefonoContactoUSA: z.string().optional(),
-  emailContactoUSA: z
-    .string()
-    .email("Email inválido")
-    .optional()
-    .or(z.literal("")),
-});
+    telefonoCelular: z
+      .string()
+      .min(7, "El teléfono debe tener al menos 7 dígitos")
+      .max(15, "El teléfono no puede exceder 15 dígitos")
+      .regex(
+        /^[\d\s\+\-\(\)]+$/,
+        "El teléfono solo puede contener números, espacios, +, - y paréntesis"
+      ),
+
+    facebook: z.string().max(100, "Máximo 100 caracteres").optional(),
+    instagram: z.string().max(100, "Máximo 100 caracteres").optional(),
+    direccionDomicilio: z.string().max(200, "Máximo 200 caracteres").optional(),
+
+    conyugeNombreCompleto: z
+      .string()
+      .max(200, "Máximo 200 caracteres")
+      .optional(),
+    conyugeFechaNacimiento: z.string().optional(),
+    conyugeLugarNacimiento: z
+      .string()
+      .max(100, "Máximo 100 caracteres")
+      .optional(),
+    matrimonioFechaInicio: z.string().optional(),
+    matrimonioFechaFin: z.string().optional(),
+
+    nombrePadre: z.string().max(200, "Máximo 200 caracteres").optional(),
+    fechaNacimientoPadre: z.string().optional(),
+    nombreMadre: z.string().max(200, "Máximo 200 caracteres").optional(),
+    fechaNacimientoMadre: z.string().optional(),
+
+    lugarTrabajo: z.string().max(150, "Máximo 150 caracteres").optional(),
+    descripcionTrabajo: z.string().max(500, "Máximo 500 caracteres").optional(),
+    fechaContratacion: z.string().optional(),
+    direccionTrabajo: z.string().max(200, "Máximo 200 caracteres").optional(),
+    cargoTrabajo: z.string().max(100, "Máximo 100 caracteres").optional(),
+    telefonoTrabajo: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^[\d\s\+\-\(\)]+$/.test(val);
+      }, "Formato de teléfono inválido"),
+
+    persepcionSalarial: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^\d+(\.\d{1,2})?$/.test(val);
+      }, "Ingrese un monto válido (solo números)"),
+
+    fechaInicioTrabajoActual: z.string().optional(),
+
+    referenciaTrabajoAnterior: z
+      .string()
+      .max(150, "Máximo 150 caracteres")
+      .optional(),
+    nombreTrabajoAnterior: z
+      .string()
+      .max(150, "Máximo 150 caracteres")
+      .optional(),
+    telefonoTrabajoAnterior: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^[\d\s\+\-\(\)]+$/.test(val);
+      }, "Formato de teléfono inválido"),
+    direccionTrabajoAnterior: z
+      .string()
+      .max(200, "Máximo 200 caracteres")
+      .optional(),
+    fechaInicioTrabajoAnterior: z.string().optional(),
+
+    lugarEstudio: z.string().max(150, "Máximo 150 caracteres").optional(),
+    carreraEstudio: z.string().max(150, "Máximo 150 caracteres").optional(),
+    direccionEstudio: z.string().max(200, "Máximo 200 caracteres").optional(),
+    telefonoEstudio: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^[\d\s\+\-\(\)]+$/.test(val);
+      }, "Formato de teléfono inválido"),
+    fechaInicioEstudio: z.string().optional(),
+    fechaFinEstudio: z.string().optional(),
+
+    fechaTentativaViaje: z.string().optional(),
+    nombreContactoUSA: z.string().max(200, "Máximo 200 caracteres").optional(),
+    direccionContactoUSA: z
+      .string()
+      .max(300, "Máximo 300 caracteres")
+      .optional(),
+    telefonoContactoUSA: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        return /^[\d\s\+\-\(\)]+$/.test(val);
+      }, "Formato de teléfono inválido"),
+
+    emailContactoUSA: z
+      .string()
+      .optional()
+      .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(val);
+      }, "Ingrese un email válido"),
+  })
+  .refine(
+    (data) => {
+      if (data.pasaporteFechaEmision && !data.numeroPasaporte) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        "Si ingresa fecha de emisión, debe ingresar el número de pasaporte",
+      path: ["numeroPasaporte"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.pasaporteFechaEmision && data.pasaporteFechaExpiracion) {
+        return (
+          new Date(data.pasaporteFechaExpiracion) >
+          new Date(data.pasaporteFechaEmision)
+        );
+      }
+      return true;
+    },
+    {
+      message:
+        "La fecha de expiración debe ser posterior a la fecha de emisión",
+      path: ["pasaporteFechaExpiracion"],
+    }
+  );
 
 type CustomerFormData = z.infer<typeof customerSchema>;
 
@@ -127,18 +262,21 @@ export function CustomerFormComplete({
   onCancel,
 }: CustomerFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
   const [loadingFamilies, setLoadingFamilies] = useState(true);
+  const [checkingCI, setCheckingCI] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
+    mode: "onChange",
     defaultValues: customer
       ? {
           motivoRecoleccionDatos: customer.motivoRecoleccionDatos || "",
@@ -253,6 +391,7 @@ export function CustomerFormComplete({
   const watchedValues = watch();
   const estadoCivilValue = watch("estadoCivil");
   const familiaIdValue = watch("familiaId");
+  const numeroCiValue = watch("numeroCi");
 
   useEffect(() => {
     const loadFamilies = async () => {
@@ -261,9 +400,15 @@ export function CustomerFormComplete({
         const result = await getFamilias();
         if (result.success) {
           setFamilies(result.data || []);
+        } else {
+          toast.error("Error al cargar grupos familiares", {
+            description: result.error,
+          });
         }
       } catch (error) {
-        console.error("Error loading families:", error);
+        toast.error("Error inesperado", {
+          description: "No se pudieron cargar los grupos familiares",
+        });
       } finally {
         setLoadingFamilies(false);
       }
@@ -272,14 +417,41 @@ export function CustomerFormComplete({
     loadFamilies();
   }, []);
 
+  useEffect(() => {
+    if (!customer && numeroCiValue && numeroCiValue.trim().length >= 7) {
+      const checkCI = async () => {
+        setCheckingCI(true);
+        try {
+          const result = await checkDuplicateCI(numeroCiValue);
+          if (result.exists) {
+            setError("numeroCi", {
+              type: "manual",
+              message: `Ya existe un cliente con el CI ${numeroCiValue}. Nombres: ${result.existingCustomer?.nombres} ${result.existingCustomer?.apellidos}`,
+            });
+            toast.warning("CI duplicado", {
+              description: `Ya existe un cliente registrado con este CI`,
+            });
+          } else {
+            clearErrors("numeroCi");
+          }
+        } catch (error) {
+          console.error("Error checking CI:", error);
+        } finally {
+          setCheckingCI(false);
+        }
+      };
+
+      const timeoutId = setTimeout(checkCI, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [numeroCiValue, customer, setError, clearErrors]);
+
   const onSubmit = async (data: CustomerFormData) => {
     setIsLoading(true);
-    setError(null);
 
     try {
       const { familiaId, parentesco, ...customerData } = data;
 
-      // Limpiar campos vacíos y convertir a CreateCustomerData
       const cleanedData = Object.fromEntries(
         Object.entries(customerData).filter(
           ([_, value]) => value !== "" && value !== undefined && value !== null
@@ -288,48 +460,80 @@ export function CustomerFormComplete({
 
       let result;
       if (customer) {
+        toast.info("Actualizando cliente", {
+          description: "Por favor espera...",
+        });
+
         result = await updateCustomer({ id: customer.id, ...cleanedData });
 
-        if (result.success && familiaId && parentesco) {
-          const familyResult = await addClienteToFamilia({
-            familiaId: Number.parseInt(familiaId),
-            clienteId: customer.id,
-            parentesco: parentesco,
+        if (result.success) {
+          toast.success("Cliente actualizado correctamente", {
+            description: `${cleanedData.nombres} ${cleanedData.apellidos} ha sido actualizado`,
           });
 
-          if (!familyResult.success) {
-            console.error(
-              "Error adding customer to family:",
-              familyResult.error
-            );
+          if (familiaId && familiaId !== "0" && parentesco) {
+            const familyResult = await addClienteToFamilia({
+              familiaId: Number.parseInt(familiaId),
+              clienteId: customer.id,
+              parentesco: parentesco,
+            });
+
+            if (familyResult.success) {
+              toast.success("Agregado al grupo familiar", {
+                description:
+                  "El cliente fue agregado correctamente al grupo familiar",
+              });
+            }
           }
+
+          onSuccess();
+        } else {
+          toast.error("Error al actualizar cliente", {
+            description: result.error || "Ocurrió un error inesperado",
+          });
         }
       } else {
+        toast.info("Creando cliente", {
+          description: "Por favor espera...",
+        });
+
         result = await createCustomer(cleanedData);
 
-        if (result.success && familiaId && parentesco && result.data) {
-          const familyResult = await addClienteToFamilia({
-            familiaId: Number.parseInt(familiaId),
-            clienteId: result.data.id,
-            parentesco: parentesco,
+        if (result.success) {
+          toast.success("Cliente creado exitosamente", {
+            description: `${cleanedData.nombres} ${cleanedData.apellidos} ha sido registrado`,
+            duration: 4000,
           });
 
-          if (!familyResult.success) {
-            console.error(
-              "Error adding customer to family:",
-              familyResult.error
-            );
+          if (familiaId && familiaId !== "0" && parentesco && result.data) {
+            const familyResult = await addClienteToFamilia({
+              familiaId: Number.parseInt(familiaId),
+              clienteId: result.data.id,
+              parentesco: parentesco,
+            });
+
+            if (familyResult.success) {
+              toast.success("Agregado al grupo familiar", {
+                description:
+                  "El cliente fue agregado correctamente al grupo familiar",
+              });
+            }
           }
+
+          onSuccess();
+        } else {
+          toast.error("Error al crear cliente", {
+            description: result.error || "Ocurrió un error inesperado",
+            duration: 5000,
+          });
         }
       }
-
-      if (result.success) {
-        onSuccess();
-      } else {
-        setError(result.error || "Error al procesar la solicitud");
-      }
     } catch (error) {
-      setError("Error inesperado");
+      console.error("Error inesperado:", error);
+      toast.error("Error inesperado", {
+        description: "Por favor intenta nuevamente o contacta al soporte",
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -337,7 +541,20 @@ export function CustomerFormComplete({
 
   return (
     <div className="max-h-[80vh] overflow-y-auto p-4">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={handleSubmit(onSubmit, (errors) => {
+          const errorCount = Object.keys(errors).length;
+          toast.error(
+            `Formulario incompleto (${errorCount} ${
+              errorCount === 1 ? "error" : "errores"
+            })`,
+            {
+              description: "Por favor revisa los campos marcados en rojo",
+            }
+          );
+        })}
+        className="space-y-8"
+      >
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -356,10 +573,13 @@ export function CustomerFormComplete({
                 {...register("motivoRecoleccionDatos")}
                 placeholder="Ej: Trámite de visa de turista para Estados Unidos, procesamiento de documentos migratorios, etc."
                 rows={3}
+                className={
+                  errors.motivoRecoleccionDatos ? "border-red-500" : ""
+                }
               />
               {errors.motivoRecoleccionDatos && (
-                <p className="text-sm text-red-500">
-                  {errors.motivoRecoleccionDatos.message}
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.motivoRecoleccionDatos.message}
                 </p>
               )}
             </div>
@@ -403,7 +623,7 @@ export function CustomerFormComplete({
                 </Select>
               </div>
 
-              {familiaIdValue && (
+              {familiaIdValue && familiaIdValue !== "0" && (
                 <div className="space-y-2">
                   <Label htmlFor="parentesco">Parentesco</Label>
                   <Select
@@ -430,7 +650,6 @@ export function CustomerFormComplete({
           </CardContent>
         </Card>
 
-        {/* Información Personal Básica */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Información Personal</CardTitle>
@@ -446,10 +665,11 @@ export function CustomerFormComplete({
                   id="nombres"
                   {...register("nombres")}
                   placeholder="Juan Carlos"
+                  className={errors.nombres ? "border-red-500" : ""}
                 />
                 {errors.nombres && (
-                  <p className="text-sm text-red-500">
-                    {errors.nombres.message}
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.nombres.message}
                   </p>
                 )}
               </div>
@@ -459,10 +679,11 @@ export function CustomerFormComplete({
                   id="apellidos"
                   {...register("apellidos")}
                   placeholder="Pérez González"
+                  className={errors.apellidos ? "border-red-500" : ""}
                 />
                 {errors.apellidos && (
-                  <p className="text-sm text-red-500">
-                    {errors.apellidos.message}
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.apellidos.message}
                   </p>
                 )}
               </div>
@@ -475,7 +696,13 @@ export function CustomerFormComplete({
                   id="fechaNacimiento"
                   type="date"
                   {...register("fechaNacimiento")}
+                  className={errors.fechaNacimiento ? "border-red-500" : ""}
                 />
+                {errors.fechaNacimiento && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.fechaNacimiento.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lugarNacimiento">Lugar de Nacimiento</Label>
@@ -483,7 +710,13 @@ export function CustomerFormComplete({
                   id="lugarNacimiento"
                   {...register("lugarNacimiento")}
                   placeholder="La Paz, Bolivia"
+                  className={errors.lugarNacimiento ? "border-red-500" : ""}
                 />
+                {errors.lugarNacimiento && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.lugarNacimiento.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nacionalidad">Nacionalidad</Label>
@@ -491,7 +724,13 @@ export function CustomerFormComplete({
                   id="nacionalidad"
                   {...register("nacionalidad")}
                   placeholder="Boliviana"
+                  className={errors.nacionalidad ? "border-red-500" : ""}
                 />
+                {errors.nacionalidad && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.nacionalidad.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -502,7 +741,22 @@ export function CustomerFormComplete({
                   id="numeroCi"
                   {...register("numeroCi")}
                   placeholder="12345678"
+                  className={
+                    errors.numeroCi
+                      ? "border-red-500"
+                      : checkingCI
+                      ? "border-yellow-500"
+                      : ""
+                  }
                 />
+                {checkingCI && (
+                  <p className="text-sm text-yellow-600">Verificando CI...</p>
+                )}
+                {errors.numeroCi && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.numeroCi.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="estadoCivil">Estado Civil</Label>
@@ -528,13 +782,18 @@ export function CustomerFormComplete({
                   id="profesion"
                   {...register("profesion")}
                   placeholder="Ingeniero de Sistemas"
+                  className={errors.profesion ? "border-red-500" : ""}
                 />
+                {errors.profesion && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.profesion.message}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Información de Contacto */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Información de Contacto</CardTitle>
@@ -551,9 +810,12 @@ export function CustomerFormComplete({
                   type="email"
                   {...register("email")}
                   placeholder="juan.perez@email.com"
+                  className={errors.email ? "border-red-500" : ""}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.email.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
@@ -562,10 +824,11 @@ export function CustomerFormComplete({
                   id="telefonoCelular"
                   {...register("telefonoCelular")}
                   placeholder="+591 70123456"
+                  className={errors.telefonoCelular ? "border-red-500" : ""}
                 />
                 {errors.telefonoCelular && (
-                  <p className="text-sm text-red-500">
-                    {errors.telefonoCelular.message}
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.telefonoCelular.message}
                   </p>
                 )}
               </div>
@@ -578,7 +841,13 @@ export function CustomerFormComplete({
                   id="facebook"
                   {...register("facebook")}
                   placeholder="@usuario.facebook"
+                  className={errors.facebook ? "border-red-500" : ""}
                 />
+                {errors.facebook && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.facebook.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="instagram">Instagram</Label>
@@ -586,7 +855,13 @@ export function CustomerFormComplete({
                   id="instagram"
                   {...register("instagram")}
                   placeholder="@usuario.instagram"
+                  className={errors.instagram ? "border-red-500" : ""}
                 />
+                {errors.instagram && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.instagram.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -597,12 +872,17 @@ export function CustomerFormComplete({
                 {...register("direccionDomicilio")}
                 placeholder="Av. Ejemplo #123, Zona Central, La Paz"
                 rows={2}
+                className={errors.direccionDomicilio ? "border-red-500" : ""}
               />
+              {errors.direccionDomicilio && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.direccionDomicilio.message}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Información de Pasaporte */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Información de Pasaporte</CardTitle>
@@ -615,7 +895,13 @@ export function CustomerFormComplete({
                 id="numeroPasaporte"
                 {...register("numeroPasaporte")}
                 placeholder="A12345678"
+                className={errors.numeroPasaporte ? "border-red-500" : ""}
               />
+              {errors.numeroPasaporte && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.numeroPasaporte.message}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -625,7 +911,15 @@ export function CustomerFormComplete({
                   id="pasaporteFechaEmision"
                   type="date"
                   {...register("pasaporteFechaEmision")}
+                  className={
+                    errors.pasaporteFechaEmision ? "border-red-500" : ""
+                  }
                 />
+                {errors.pasaporteFechaEmision && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.pasaporteFechaEmision.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pasaporteFechaExpiracion">
@@ -635,13 +929,20 @@ export function CustomerFormComplete({
                   id="pasaporteFechaExpiracion"
                   type="date"
                   {...register("pasaporteFechaExpiracion")}
+                  className={
+                    errors.pasaporteFechaExpiracion ? "border-red-500" : ""
+                  }
                 />
+                {errors.pasaporteFechaExpiracion && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.pasaporteFechaExpiracion.message}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Información Familiar - Cónyuge */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Información del Cónyuge</CardTitle>
@@ -656,7 +957,13 @@ export function CustomerFormComplete({
                 id="conyugeNombreCompleto"
                 {...register("conyugeNombreCompleto")}
                 placeholder="María Elena Rodríguez"
+                className={errors.conyugeNombreCompleto ? "border-red-500" : ""}
               />
+              {errors.conyugeNombreCompleto && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.conyugeNombreCompleto.message}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -678,7 +985,15 @@ export function CustomerFormComplete({
                   id="conyugeLugarNacimiento"
                   {...register("conyugeLugarNacimiento")}
                   placeholder="Cochabamba, Bolivia"
+                  className={
+                    errors.conyugeLugarNacimiento ? "border-red-500" : ""
+                  }
                 />
+                {errors.conyugeLugarNacimiento && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.conyugeLugarNacimiento.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -707,7 +1022,6 @@ export function CustomerFormComplete({
           </CardContent>
         </Card>
 
-        {/* Información Familiar - Padres */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Información de los Padres</CardTitle>
@@ -721,7 +1035,13 @@ export function CustomerFormComplete({
                   id="nombrePadre"
                   {...register("nombrePadre")}
                   placeholder="Carlos Pérez Martínez"
+                  className={errors.nombrePadre ? "border-red-500" : ""}
                 />
+                {errors.nombrePadre && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.nombrePadre.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fechaNacimientoPadre">
@@ -742,7 +1062,13 @@ export function CustomerFormComplete({
                   id="nombreMadre"
                   {...register("nombreMadre")}
                   placeholder="Ana González López"
+                  className={errors.nombreMadre ? "border-red-500" : ""}
                 />
+                {errors.nombreMadre && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.nombreMadre.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fechaNacimientoMadre">
@@ -758,7 +1084,6 @@ export function CustomerFormComplete({
           </CardContent>
         </Card>
 
-        {/* Información Laboral Actual */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -776,7 +1101,13 @@ export function CustomerFormComplete({
                   id="lugarTrabajo"
                   {...register("lugarTrabajo")}
                   placeholder="Empresa ABC S.A."
+                  className={errors.lugarTrabajo ? "border-red-500" : ""}
                 />
+                {errors.lugarTrabajo && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.lugarTrabajo.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cargoTrabajo">Cargo</Label>
@@ -784,7 +1115,13 @@ export function CustomerFormComplete({
                   id="cargoTrabajo"
                   {...register("cargoTrabajo")}
                   placeholder="Gerente de Ventas"
+                  className={errors.cargoTrabajo ? "border-red-500" : ""}
                 />
+                {errors.cargoTrabajo && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.cargoTrabajo.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -797,7 +1134,13 @@ export function CustomerFormComplete({
                 {...register("descripcionTrabajo")}
                 placeholder="Descripción detallada de las funciones y responsabilidades"
                 rows={3}
+                className={errors.descripcionTrabajo ? "border-red-500" : ""}
               />
+              {errors.descripcionTrabajo && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.descripcionTrabajo.message}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -822,11 +1165,16 @@ export function CustomerFormComplete({
               <div className="space-y-2">
                 <Label htmlFor="persepcionSalarial">Percepción Salarial</Label>
                 <Input
-                  type="number"
                   id="persepcionSalarial"
                   {...register("persepcionSalarial")}
-                  placeholder="Bs. 5,000"
+                  placeholder="5000"
+                  className={errors.persepcionSalarial ? "border-red-500" : ""}
                 />
+                {errors.persepcionSalarial && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.persepcionSalarial.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -837,7 +1185,13 @@ export function CustomerFormComplete({
                   id="direccionTrabajo"
                   {...register("direccionTrabajo")}
                   placeholder="Av. Empresarial #456"
+                  className={errors.direccionTrabajo ? "border-red-500" : ""}
                 />
+                {errors.direccionTrabajo && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.direccionTrabajo.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="telefonoTrabajo">Teléfono del Trabajo</Label>
@@ -845,13 +1199,18 @@ export function CustomerFormComplete({
                   id="telefonoTrabajo"
                   {...register("telefonoTrabajo")}
                   placeholder="+591 2 2345678"
+                  className={errors.telefonoTrabajo ? "border-red-500" : ""}
                 />
+                {errors.telefonoTrabajo && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.telefonoTrabajo.message}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Información Laboral Anterior */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -871,7 +1230,15 @@ export function CustomerFormComplete({
                   id="nombreTrabajoAnterior"
                   {...register("nombreTrabajoAnterior")}
                   placeholder="Empresa XYZ Ltda."
+                  className={
+                    errors.nombreTrabajoAnterior ? "border-red-500" : ""
+                  }
                 />
+                {errors.nombreTrabajoAnterior && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.nombreTrabajoAnterior.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="referenciaTrabajoAnterior">Referencia</Label>
@@ -879,7 +1246,15 @@ export function CustomerFormComplete({
                   id="referenciaTrabajoAnterior"
                   {...register("referenciaTrabajoAnterior")}
                   placeholder="Juan Supervisor"
+                  className={
+                    errors.referenciaTrabajoAnterior ? "border-red-500" : ""
+                  }
                 />
+                {errors.referenciaTrabajoAnterior && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.referenciaTrabajoAnterior.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -890,7 +1265,15 @@ export function CustomerFormComplete({
                   id="direccionTrabajoAnterior"
                   {...register("direccionTrabajoAnterior")}
                   placeholder="Calle Antigua #789"
+                  className={
+                    errors.direccionTrabajoAnterior ? "border-red-500" : ""
+                  }
                 />
+                {errors.direccionTrabajoAnterior && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.direccionTrabajoAnterior.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="telefonoTrabajoAnterior">Teléfono</Label>
@@ -898,7 +1281,15 @@ export function CustomerFormComplete({
                   id="telefonoTrabajoAnterior"
                   {...register("telefonoTrabajoAnterior")}
                   placeholder="+591 2 3456789"
+                  className={
+                    errors.telefonoTrabajoAnterior ? "border-red-500" : ""
+                  }
                 />
+                {errors.telefonoTrabajoAnterior && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.telefonoTrabajoAnterior.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -915,7 +1306,6 @@ export function CustomerFormComplete({
           </CardContent>
         </Card>
 
-        {/* Información de Estudios */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Información de Estudios</CardTitle>
@@ -929,7 +1319,13 @@ export function CustomerFormComplete({
                   id="lugarEstudio"
                   {...register("lugarEstudio")}
                   placeholder="Universidad Mayor de San Andrés"
+                  className={errors.lugarEstudio ? "border-red-500" : ""}
                 />
+                {errors.lugarEstudio && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.lugarEstudio.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="carreraEstudio">Carrera</Label>
@@ -937,7 +1333,13 @@ export function CustomerFormComplete({
                   id="carreraEstudio"
                   {...register("carreraEstudio")}
                   placeholder="Ingeniería de Sistemas"
+                  className={errors.carreraEstudio ? "border-red-500" : ""}
                 />
+                {errors.carreraEstudio && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.carreraEstudio.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -950,7 +1352,13 @@ export function CustomerFormComplete({
                   id="direccionEstudio"
                   {...register("direccionEstudio")}
                   placeholder="Av. Universitaria #123"
+                  className={errors.direccionEstudio ? "border-red-500" : ""}
                 />
+                {errors.direccionEstudio && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.direccionEstudio.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="telefonoEstudio">Teléfono</Label>
@@ -958,7 +1366,13 @@ export function CustomerFormComplete({
                   id="telefonoEstudio"
                   {...register("telefonoEstudio")}
                   placeholder="+591 2 4567890"
+                  className={errors.telefonoEstudio ? "border-red-500" : ""}
                 />
+                {errors.telefonoEstudio && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.telefonoEstudio.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -983,7 +1397,6 @@ export function CustomerFormComplete({
           </CardContent>
         </Card>
 
-        {/* Información de Viaje y Contacto en USA */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -1013,7 +1426,13 @@ export function CustomerFormComplete({
                 id="nombreContactoUSA"
                 {...register("nombreContactoUSA")}
                 placeholder="John Smith"
+                className={errors.nombreContactoUSA ? "border-red-500" : ""}
               />
+              {errors.nombreContactoUSA && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.nombreContactoUSA.message}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1025,7 +1444,15 @@ export function CustomerFormComplete({
                   id="direccionContactoUSA"
                   {...register("direccionContactoUSA")}
                   placeholder="123 Main St, New York, NY"
+                  className={
+                    errors.direccionContactoUSA ? "border-red-500" : ""
+                  }
                 />
+                {errors.direccionContactoUSA && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.direccionContactoUSA.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="telefonoContactoUSA">
@@ -1035,7 +1462,13 @@ export function CustomerFormComplete({
                   id="telefonoContactoUSA"
                   {...register("telefonoContactoUSA")}
                   placeholder="+1 555 123 4567"
+                  className={errors.telefonoContactoUSA ? "border-red-500" : ""}
                 />
+                {errors.telefonoContactoUSA && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    ⚠️ {errors.telefonoContactoUSA.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1046,29 +1479,27 @@ export function CustomerFormComplete({
                 type="email"
                 {...register("emailContactoUSA")}
                 placeholder="john.smith@email.com"
+                className={errors.emailContactoUSA ? "border-red-500" : ""}
               />
               {errors.emailContactoUSA && (
-                <p className="text-sm text-red-500">
-                  {errors.emailContactoUSA.message}
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  ⚠️ {errors.emailContactoUSA.message}
                 </p>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Error message */}
-        {error && (
-          <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        {/* Botones */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex justify-end gap-3 pt-4 border-t bottom-0 bg-white pb-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || checkingCI}>
             {isLoading
               ? "Guardando..."
               : customer

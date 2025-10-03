@@ -495,3 +495,48 @@ export async function addClienteToFamilia(data: {
     };
   }
 }
+
+export async function checkDuplicateCI(numeroCi: string) {
+  try {
+    console.log("🔍 Verificando CI duplicado:", numeroCi);
+
+    const existingCustomer = await db
+      .select({
+        id: clientes.id,
+        nombres: clientes.nombres,
+        apellidos: clientes.apellidos,
+        numeroCi: clientes.numeroCi,
+      })
+      .from(clientes)
+      .where(
+        and(eq(clientes.numeroCi, numeroCi), isNull(clientes.fechaEliminacion))
+      )
+      .limit(1);
+
+    if (existingCustomer.length > 0) {
+      console.log("⚠️ CI duplicado encontrado:", existingCustomer[0]);
+      return {
+        success: true,
+        exists: true,
+        existingCustomer: existingCustomer[0],
+      };
+    }
+
+    console.log("✅ CI no duplicado");
+    return {
+      success: true,
+      exists: false,
+      existingCustomer: null,
+    };
+  } catch (error) {
+    console.error("❌ Error checking duplicate CI:", error);
+    return {
+      success: false,
+      error: `Error al verificar CI: ${
+        error instanceof Error ? error.message : "Error desconocido"
+      }`,
+      exists: false,
+      existingCustomer: null,
+    };
+  }
+}
