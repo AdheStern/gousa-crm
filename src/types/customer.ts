@@ -50,6 +50,15 @@ export interface Customer {
   direccionContactoUSA?: string | null;
   telefonoContactoUSA?: string | null;
   emailContactoUSA?: string | null;
+  // Nuevos campos
+  historicoViajes?: string | null;
+  nombrePatrocinador?: string | null;
+  direccionPatrocinador?: string | null;
+  telefonoPatrocinador?: string | null;
+  emailPatrocinador?: string | null;
+  trabajoPatrocinador?: string | null;
+  fechaInicioTrabajoPatrocinador?: string | null;
+  percepcionSalarialPatrocinador?: string | null;
   fechaCreacion: string;
   fechaModificacion?: string | null;
   fechaEliminacion?: string | null;
@@ -106,6 +115,15 @@ export interface CreateCustomerData {
   direccionContactoUSA?: string;
   telefonoContactoUSA?: string;
   emailContactoUSA?: string;
+  // Nuevos campos
+  historicoViajes?: string;
+  nombrePatrocinador?: string;
+  direccionPatrocinador?: string;
+  telefonoPatrocinador?: string;
+  emailPatrocinador?: string;
+  trabajoPatrocinador?: string;
+  fechaInicioTrabajoPatrocinador?: string;
+  percepcionSalarialPatrocinador?: string;
   crearGrupoFamiliar?: boolean;
   nombreGrupoFamiliar?: string;
   parentesco?: string;

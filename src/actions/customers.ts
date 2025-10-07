@@ -12,10 +12,8 @@ export async function getCustomers(searchTerm?: string) {
     console.log("🔍 Buscando clientes...", { searchTerm });
     console.log("🔗 DATABASE_URL configurada:", !!process.env.DATABASE_URL);
 
-    // Construir array de condiciones
     const conditions: SQL<unknown>[] = [isNull(clientes.fechaEliminacion)];
 
-    // Si hay término de búsqueda, agregar filtros de búsqueda
     if (searchTerm && searchTerm.trim() !== "") {
       const searchPattern = `%${searchTerm.trim()}%`;
       const searchCondition = or(
@@ -27,17 +25,14 @@ export async function getCustomers(searchTerm?: string) {
         ilike(clientes.motivoRecoleccionDatos, searchPattern)
       );
 
-      // Solo agregar si searchCondition no es undefined
       if (searchCondition) {
         conditions.push(searchCondition);
       }
     }
 
-    // Combinar todas las condiciones
     const whereCondition =
       conditions.length === 1 ? conditions[0] : and(...conditions);
 
-    // Ejecutar la query
     const result = await db
       .select()
       .from(clientes)
@@ -73,9 +68,9 @@ export async function createCustomer(data: CreateCustomerData) {
   try {
     console.log("📝 Creando cliente:", data.nombres, data.apellidos);
 
-    // Convertir strings vacías a null para campos opcionales
     const processedData = {
-      ...data,
+      nombres: data.nombres,
+      apellidos: data.apellidos,
       fechaNacimiento: data.fechaNacimiento || null,
       lugarNacimiento: data.lugarNacimiento || null,
       nacionalidad: data.nacionalidad || null,
@@ -124,26 +119,29 @@ export async function createCustomer(data: CreateCustomerData) {
       direccionContactoUSA: data.direccionContactoUSA || null,
       telefonoContactoUSA: data.telefonoContactoUSA || null,
       emailContactoUSA: data.emailContactoUSA || null,
+      historicoViajes: data.historicoViajes || null,
+      nombrePatrocinador: data.nombrePatrocinador || null,
+      direccionPatrocinador: data.direccionPatrocinador || null,
+      telefonoPatrocinador: data.telefonoPatrocinador || null,
+      emailPatrocinador: data.emailPatrocinador || null,
+      trabajoPatrocinador: data.trabajoPatrocinador || null,
+      fechaInicioTrabajoPatrocinador:
+        data.fechaInicioTrabajoPatrocinador || null,
+      percepcionSalarialPatrocinador:
+        data.percepcionSalarialPatrocinador || null,
     };
 
-    // Remover campos específicos del grupo familiar del objeto del cliente
-    const {
-      crearGrupoFamiliar,
-      nombreGrupoFamiliar,
-      parentesco,
-      ...clienteData
-    } = processedData;
-
-    const result = await db.insert(clientes).values(clienteData).returning();
+    const result = await db.insert(clientes).values(processedData).returning();
     const nuevoCliente = result[0];
 
+    // Esta lógica para crear un grupo familiar no estaba en tu formulario,
+    // pero la mantengo del action anterior por si la necesitas en el futuro.
     if (
       data.crearGrupoFamiliar &&
       data.nombreGrupoFamiliar &&
       data.parentesco
     ) {
       try {
-        // Crear el grupo familiar
         const familiaResult = await db
           .insert(familias)
           .values({
@@ -154,7 +152,6 @@ export async function createCustomer(data: CreateCustomerData) {
 
         const nuevaFamilia = familiaResult[0];
 
-        // Asociar el cliente al grupo familiar
         await db.insert(familiaClientes).values({
           familiaId: nuevaFamilia.id,
           clienteId: nuevoCliente.id,
@@ -164,7 +161,6 @@ export async function createCustomer(data: CreateCustomerData) {
         console.log("✅ Grupo familiar creado:", nuevaFamilia.nombre);
       } catch (familyError) {
         console.error("⚠️ Error creando grupo familiar:", familyError);
-        // No fallar la creación del cliente si hay error en el grupo familiar
       }
     }
 
@@ -190,6 +186,7 @@ export async function createCustomer(data: CreateCustomerData) {
 export async function updateCustomer(data: UpdateCustomerData) {
   try {
     console.log("📝 Actualizando cliente:", data.id);
+    console.log("📝 Datos recibidos:", data);
 
     const {
       id,
@@ -199,9 +196,9 @@ export async function updateCustomer(data: UpdateCustomerData) {
       ...updateData
     } = data;
 
-    // Convertir strings vacías a null y agregar fecha de modificación
     const processedData = {
-      ...updateData,
+      nombres: updateData.nombres,
+      apellidos: updateData.apellidos,
       fechaNacimiento: updateData.fechaNacimiento || null,
       lugarNacimiento: updateData.lugarNacimiento || null,
       nacionalidad: updateData.nacionalidad || null,
@@ -250,12 +247,20 @@ export async function updateCustomer(data: UpdateCustomerData) {
       direccionContactoUSA: updateData.direccionContactoUSA || null,
       telefonoContactoUSA: updateData.telefonoContactoUSA || null,
       emailContactoUSA: updateData.emailContactoUSA || null,
+      historicoViajes: updateData.historicoViajes || null,
+      nombrePatrocinador: updateData.nombrePatrocinador || null,
+      direccionPatrocinador: updateData.direccionPatrocinador || null,
+      telefonoPatrocinador: updateData.telefonoPatrocinador || null,
+      emailPatrocinador: updateData.emailPatrocinador || null,
+      trabajoPatrocinador: updateData.trabajoPatrocinador || null,
+      fechaInicioTrabajoPatrocinador:
+        updateData.fechaInicioTrabajoPatrocinador || null,
+      percepcionSalarialPatrocinador:
+        updateData.percepcionSalarialPatrocinador || null,
       fechaModificacion: new Date(),
     };
 
-    const cleanData = Object.fromEntries(
-      Object.entries(processedData).filter(([_, value]) => value !== undefined)
-    );
+    console.log("📝 Datos procesados para actualización:", processedData);
 
     const result = await db
       .update(clientes)
@@ -277,7 +282,6 @@ export async function updateCustomer(data: UpdateCustomerData) {
   }
 }
 
-// Eliminar un cliente (soft delete)
 export async function deleteCustomer(id: number) {
   try {
     console.log("🗑️ Eliminando cliente:", id);
@@ -304,15 +308,12 @@ export async function deleteCustomer(id: number) {
   }
 }
 
-// Obtener todas las familias (solo las no eliminadas) con búsqueda opcional
 export async function getFamilias(searchTerm?: string) {
   try {
     console.log("🔍 Buscando familias...", { searchTerm });
 
-    // Construir array de condiciones
     const conditions: SQL<unknown>[] = [isNull(familias.fechaEliminacion)];
 
-    // Si hay término de búsqueda, agregar filtros de búsqueda
     if (searchTerm && searchTerm.trim() !== "") {
       const searchPattern = `%${searchTerm.trim()}%`;
       const searchCondition = or(
@@ -325,7 +326,6 @@ export async function getFamilias(searchTerm?: string) {
       }
     }
 
-    // Combinar todas las condiciones
     const whereCondition =
       conditions.length === 1 ? conditions[0] : and(...conditions);
 
@@ -443,7 +443,6 @@ export async function addClienteToFamilia(data: {
   try {
     console.log("👨‍👩‍👧‍👦 Agregando cliente a familia:", data);
 
-    // Check if relationship already exists
     const existing = await db
       .select()
       .from(familiaClientes)
@@ -455,7 +454,6 @@ export async function addClienteToFamilia(data: {
       );
 
     if (existing.length > 0) {
-      // Update existing relationship
       const result = await db
         .update(familiaClientes)
         .set({
@@ -472,7 +470,6 @@ export async function addClienteToFamilia(data: {
       console.log("✅ Relación familiar actualizada:", result[0].id);
       return { success: true, data: result[0] };
     } else {
-      // Create new relationship
       const result = await db
         .insert(familiaClientes)
         .values({
@@ -496,6 +493,7 @@ export async function addClienteToFamilia(data: {
   }
 }
 
+// ========= FUNCIÓN AÑADIDA =========
 export async function checkDuplicateCI(numeroCi: string) {
   try {
     console.log("🔍 Verificando CI duplicado:", numeroCi);
