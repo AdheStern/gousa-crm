@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCitasCalendario } from "@/actions/citas";
 import type { CitaCalendario } from "@/types/cita";
+import { toZonedTime } from "date-fns-tz";
 import {
   format,
   startOfMonth,
@@ -20,6 +21,8 @@ import {
   isSameMonth,
 } from "date-fns";
 import { es } from "date-fns/locale";
+
+const zonaBolivia = "America/La_Paz";
 
 interface CalendarioCitasProps {
   onNewCita: (fecha?: string) => void;
@@ -42,8 +45,8 @@ export function CalendarioCitas({
       const fin = endOfMonth(fecha);
 
       const result = await getCitasCalendario(
-        inicio.toISOString(),
-        fin.toISOString()
+        format(inicio, "yyyy-MM-dd HH:mm:ss"),
+        format(fin, "yyyy-MM-dd HH:mm:ss")
       );
 
       if (result.success) {
@@ -193,8 +196,14 @@ export function CalendarioCitas({
                               }}
                             >
                               <div className="truncate">
-                                {format(new Date(cita.start), "HH:mm")} -{" "}
-                                {cita.extendedProps.cliente}
+                                {format(
+                                  toZonedTime(
+                                    new Date(cita.start),
+                                    zonaBolivia
+                                  ),
+                                  "HH:mm"
+                                )}{" "}
+                                - {cita.extendedProps.cliente}
                               </div>
                               <div className="truncate opacity-90">
                                 {cita.extendedProps.tipoCita}
